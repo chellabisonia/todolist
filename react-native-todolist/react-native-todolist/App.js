@@ -4,8 +4,9 @@ import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { s } from "./App.style";
 import { CardTodo } from "./components/CardTodo/CardTodo";
 import { Header } from "./components/Header/Header";
-
+import { TabBottomMenu } from "./components/TabBottomMenu/TabBottomMenu";
 export default function App() {
+  const [selectedTabName, setSelectedTabName] = useState("all");
   const [todoList, setTodoList] = useState([
     { id: 1, title: "Sortir le chien", isCompleted: true },
     { id: 2, title: "Aller chez le garagiste", isCompleted: false },
@@ -17,13 +18,40 @@ export default function App() {
     { id: 8, title: "Appeler le vétérinaire", isCompleted: true },
   ]);
 
+  function getFilteredList() {
+    switch (selectedTabName) {
+      case "all":
+        return todoList;
+      case "inProgress":
+        return todoList.filter((todo) => !todo.isCompleted);
+      case "done":
+        return todoList.filter((todo) => todo.isCompleted);
+    }
+  }
+
+  function updateTodo(todo) {
+    const updatedTodo = {
+      ...todo,
+      isCompleted: !todo.isCompleted,
+    };
+
+    const indexToUpdate = todoList.findIndex(
+      (todo) => todo.id === updatedTodo.id
+    );
+
+    const updatedTodoList = [...todoList];
+    updatedTodoList[indexToUpdate] = updatedTodo;
+    setTodoList(updatedTodoList);
+  }
+
   function renderTodoList() {
-    return todoList.map((todo) => (
+    return getFilteredList().map((todo) => (
       <View style={s.cardItem} key={todo.id}>
-        <CardTodo todo={todo} />
+        <CardTodo onPress={updateTodo} todo={todo} />
       </View>
     ));
   }
+
   return (
     <>
       <SafeAreaProvider>
@@ -36,9 +64,11 @@ export default function App() {
           </View>
         </SafeAreaView>
       </SafeAreaProvider>
-      <View style={s.footer}>
-        <Text>Footer</Text>
-      </View>
+      <TabBottomMenu
+        todoList={todoList}
+        onPress={setSelectedTabName}
+        selectedTabName={selectedTabName}
+      />
     </>
   );
 }
